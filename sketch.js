@@ -1,18 +1,19 @@
 console.log('loaded sketch');
-// CR mrussell: add an undo button
+
 let initial_boxes = [1,1,1,1,1,1]
 let boxes = [...initial_boxes]
 let op1_corners = []
 let op2_corners = []
 let op1_inputs = []
-let box_width = 100;
-let padding = 150;
+let box_width = 70;
+let padding = 100;
 let spacing;
 let total_input;
 let path = [];
-// 1O1_3 O2_2 0O1_3 1O1_1 O2_2 0O1_3 O2_2 1O1_0 O2_1 1O1_2 0O1_3 O2_2 0O1_3 O2_2 0O1_3 O2_2 0O1_3 O2_2 0O1_3 O2_2 0O1_3 O2_2 0O1_3 O2_2 0O1_3 O2_2 0O1_3 O2_2 0O1_3 O2_2 0O1_3 O2_2 O2_1 1O1_2 0O1_3 O2_2 0O1_3 O2_2 0O1_3 O2_2 0O1_3 O2_2 0O1_3 O2_2 0O1_3 O2_2 0O1_3 O2_2 0O1_3 O2_2 0O1_3 O2_2
 let path_input;
 let y_start = 150;
+
+let start_of_optimal_path = "1O1_3 0O1_4 1O1_2 O2_3 0O1_4 O2_3 1O1_1 O2_2 1O1_3 0O1_4 O2_3 0O1_4 O2_3 0O1_4 O2_3 0O1_4 O2_3 0O1_4 O2_3 0O1_4 O2_3 0O1_4 O2_3 0O1_4 O2_3 0O1_4 O2_3 0O1_4 O2_3 0O1_4 O2_3 0O1_4 O2_3 0O1_4 O2_3 O2_2 1O1_0 O2_1"
 
 function reset() {
   boxes = [...initial_boxes]
@@ -65,6 +66,32 @@ function parse_path_string_exn(s) {
     .map(parse_path_element_exn)
 }
 
+function append_to_path(s) {
+  path.push(s);
+  path_input.value(path.join(' '));
+}
+
+function swap_boxes(i, j) {
+  let tmp = boxes[i];
+  boxes[i] = boxes[j];
+  boxes[j] = tmp;
+}
+
+function o1(num_times, i) {
+  append_to_path(`${num_times}O1_${i}`);
+  path_input.value(path.join(' '));
+  let n = num_times == 0 ? boxes[i] : num_times;
+  boxes[i] -= n;
+  boxes[i+1] += 2 * n;
+  op1_inputs[i].value('1');
+}
+
+function o2(i) {
+  append_to_path(`O2_${i}`);
+  boxes[i] -= 1;
+  swap_boxes(i+1, i+2);
+}
+
 function apply_path_element(el) {
   let [n_, o, i] = el;
     if (o == 1) {
@@ -85,8 +112,14 @@ function applyPath(new_path) {
   }
 }
 
+function show_solution() {
+  reset();
+  let new_path = parse_path_string_exn(start_of_optimal_path);
+  applyPath(new_path);
+}
+
 function setup() {
-  createCanvas(1100, 400);
+  createCanvas(790, 400);
   rectMode(CENTER);
   spacing = (width - 2 * padding) / (boxes.length - 1);
   for (i = 0; i < boxes.length; i++) {
@@ -101,7 +134,7 @@ function setup() {
       rect(x, y, w, w);
       op1_corners[i] = [x, y, w];
       let input = createInput('1', "tel");
-      input.position(x - w / 4, y + w);
+      input.position(x - w/8, y + w); // confused - why does w/8 look right?
       input.size(w);
       op1_inputs[i] = input;
     }
@@ -128,12 +161,13 @@ function setup() {
   // draw total
   let y = y_start - box_width;
   let x = padding - box_width / 2;
-  textAlign(RIGHT);
+  textAlign(LEFT, CENTER);
   textSize(15);
-  total_input = createInput('');
-  total_input.position(x, y);
-  total_input.size(200);
+  let total_text = "Total: ";
   text("Total:    ", x, y);
+  total_input = createInput('');
+  total_input.position(x + textWidth(total_text) + 10, y);
+  total_input.size(200);
   
   // make 'your path'
   x = 100;
@@ -167,7 +201,7 @@ function draw() {
     let x = padding + i * spacing;
     stroke(0);
     rect(x, y, box_width, box_width);
-    textSize(40);
+    textSize(25);
     textAlign(CENTER, CENTER);
     text(boxes[i].toString(), x, y);
   }
@@ -180,32 +214,6 @@ function inBox(box, point) {
   let [x,y] = point;
   let [bx, by, bw] = box;
   return Math.abs(x - bx) < bw / 2 && Math.abs(y - by) < bw / 2;
-}
-
-function swap_boxes(i, j) {
-  let tmp = boxes[i];
-  boxes[i] = boxes[j];
-  boxes[j] = tmp;
-}
-
-function append_to_path(s) {
-  path.push(s);
-  path_input.value(path.join(' '));
-}
-
-function o1(num_times, i) {
-  append_to_path(`${num_times}O1_${i}`);
-  path_input.value(path.join(' '));
-  let n = num_times == 0 ? boxes[i] : num_times;
-  boxes[i] -= n;
-  boxes[i+1] += 2 * n;
-  op1_inputs[i].value('1');
-}
-
-function o2(i) {
-  append_to_path(`O2_${i}`);
-  boxes[i] -= 1;
-  swap_boxes(i+1, i+2);
 }
 
 function mouseClicked() {
