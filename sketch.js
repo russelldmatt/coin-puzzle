@@ -100,7 +100,7 @@ function setup() {
       let w = box_width / 3;
       rect(x, y, w, w);
       op1_corners[i] = [x, y, w];
-      let input = createInput('1');
+      let input = createInput('1', "tel");
       input.position(x - w / 4, y + w);
       input.size(w);
       op1_inputs[i] = input;
