@@ -1,6 +1,6 @@
 console.log('loaded sketch');
-// CR mrussell: add a restart button
-let initial_boxes = [1n,1n,1n,1n,1n,1n]
+// CR mrussell: add an undo button
+let initial_boxes = [1,1,1,1,1,1]
 let boxes = [...initial_boxes]
 let op1_corners = []
 let op2_corners = []
@@ -21,7 +21,7 @@ function reset() {
 }
 
 function parseNumTimes(n, i) {
-  if (n < 0n) {
+  if (n < 0) {
     return boxes[i] - n
   } else {
     return n
@@ -42,12 +42,12 @@ function parse_path_string_exn(s) {
     .filter(x => x.length > 0)
     .map(s => s.split("O").map(s => s.split("_")))
     .map(([ns, os]) => {
-      let n = BigInt(ns[0].length == 0 ? 1 : parseIntNoNan(ns[0]));
+      let n = ns[0].length == 0 ? 1 : parseIntNoNan(ns[0]);
       let [o, i] = os;
       o = parseIntNoNan(o);
       i = parseIntNoNan(i);
       if (o < 1 || o > 2) throw("o must be either 1 or 2");
-      if (o == 2 && n !== 1n) throw("n must be 1 when o is 2: ${n}");
+      if (o == 2 && n !== 1) throw("n must be 1 when o is 2: ${n}");
       if (i < 0 || i >= boxes.length) throw(`i must be between 0 and ${boxes.length}: ${i}`)
       return [n, o, i]
     })
@@ -60,7 +60,7 @@ function applyPath(new_path) {
       if (boxes[i] < n) throw(`not enough in box ${i}: ${boxes[i]} < ${n}`)
       o1(n, i)
     } else if (o == 2) {
-      if (boxes[i] < 1n) throw(`not enough in box ${i}: ${boxes[i]} < 1`)
+      if (boxes[i] < 1) throw(`not enough in box ${i}: ${boxes[i]} < 1`)
       o2(i)
     } else {
       throw(`o must be either 1 or 2: ${o}`)
@@ -150,7 +150,7 @@ function draw() {
     text(boxes[i].toString(), x, y);
   }
 
-  let total = boxes.reduce((a, b) => a + b, 0n);
+  let total = boxes.reduce((a, b) => a + b, 0);
   total_input.value(`${total}`)
 }
 
@@ -174,15 +174,15 @@ function append_to_path(s) {
 function o1(num_times, i) {
   append_to_path(`${num_times}O1_${i}`);
   path_input.value(path.join(' '));
-  let n = num_times == 0n ? boxes[i] : num_times;
+  let n = num_times == 0 ? boxes[i] : num_times;
   boxes[i] -= n;
-  boxes[i+1] += 2n * n;
+  boxes[i+1] += 2 * n;
   op1_inputs[i].value('1');
 }
 
 function o2(i) {
   append_to_path(`O2_${i}`);
-  boxes[i] -= 1n;
+  boxes[i] -= 1;
   swap_boxes(i+1, i+2);
 }
 
@@ -194,7 +194,7 @@ function mouseClicked() {
       let input = op1_inputs[i];
       let num_times = parseInt(input.value()); 
       if (!isNaN(num_times)) {
-        num_times = parseNumTimes(BigInt(num_times), i)
+        num_times = parseNumTimes(num_times, i)
       } else {
         input.value('1')
       }
