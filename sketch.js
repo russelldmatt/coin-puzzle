@@ -20,6 +20,16 @@ function reset() {
   path_input.value('')
 }
 
+function undo() {
+  let saved_path = [...path];
+  saved_path.pop();
+  reset();
+  for (let s of saved_path) {
+    let el = parse_path_element_exn(s);
+    apply_path_element(el)
+  }
+}
+
 function parseNumTimes(n, i) {
   if (n < 0) {
     return boxes[i] - n
@@ -36,25 +46,27 @@ function parseIntNoNan(s) {
     return i
   }
 }
-  
+
+function parse_path_element_exn(s) {
+  let [ns, os] = s.split("O").map(s => s.split("_"))
+  let n = ns[0].length == 0 ? 1 : parseIntNoNan(ns[0]);
+  let [o, i] = os;
+  o = parseIntNoNan(o);
+  i = parseIntNoNan(i);
+  if (o < 1 || o > 2) throw("o must be either 1 or 2");
+  if (o == 2 && n !== 1) throw("n must be 1 when o is 2: ${n}");
+  if (i < 0 || i >= boxes.length) throw(`i must be between 0 and ${boxes.length}: ${i}`)
+  return [n, o, i]  
+}
+
 function parse_path_string_exn(s) {
   return s.split(' ')
     .filter(x => x.length > 0)
-    .map(s => s.split("O").map(s => s.split("_")))
-    .map(([ns, os]) => {
-      let n = ns[0].length == 0 ? 1 : parseIntNoNan(ns[0]);
-      let [o, i] = os;
-      o = parseIntNoNan(o);
-      i = parseIntNoNan(i);
-      if (o < 1 || o > 2) throw("o must be either 1 or 2");
-      if (o == 2 && n !== 1) throw("n must be 1 when o is 2: ${n}");
-      if (i < 0 || i >= boxes.length) throw(`i must be between 0 and ${boxes.length}: ${i}`)
-      return [n, o, i]
-    })
+    .map(parse_path_element_exn)
 }
 
-function applyPath(new_path) {
-  for (let [n_, o, i] of new_path) {
+function apply_path_element(el) {
+  let [n_, o, i] = el;
     if (o == 1) {
       let n = parseNumTimes(n_, i)
       if (boxes[i] < n) throw(`not enough in box ${i}: ${boxes[i]} < ${n}`)
@@ -65,6 +77,11 @@ function applyPath(new_path) {
     } else {
       throw(`o must be either 1 or 2: ${o}`)
     }
+}
+  
+function applyPath(new_path) {
+  for (let el of new_path) {
+    apply_path_element(el)
   }
 }
 
@@ -98,9 +115,14 @@ function setup() {
   }
 
   // reset button
-  let button = createButton('restart');
-  button.position(20, 20);
-  button.mousePressed(reset);
+  let resetButton = createButton('restart');
+  resetButton.position(20, 20);
+  resetButton.mousePressed(reset);
+  
+  // undo button
+  let undoButton = createButton('undo');
+  undoButton.position(20 + resetButton.size().width + 10, 20);
+  undoButton.mousePressed(undo);
   
   stroke(0)
   // draw total
