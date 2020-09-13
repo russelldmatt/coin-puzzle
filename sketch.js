@@ -1,3 +1,4 @@
+console.log('loaded sketch');
 // CR mrussell: add a restart button
 let initial_boxes = [1n,1n,1n,1n,1n,1n]
 let boxes = [...initial_boxes]
